@@ -21,3 +21,10 @@ const authMiddleware = ({ req }) => {
 
   return req; 
 };
+
+const signToken = ({ _id, username, email }) => {
+  const payload = { _id, username, email };
+  return jwt.sign({ data: payload }, secret, { expiresIn: '2h' }); // Set an expiration for the token
+};
+
+module.exports = { authMiddleware, signToken };
