@@ -8,6 +8,9 @@ import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
+  // Initialize savedBookIds from local storage
+  const savedBookIds = getSavedBookIds();
+
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
@@ -16,9 +19,10 @@ const SearchBooks = () => {
   // Apollo mutation hook for saving a book
   const [saveBook] = useMutation(SAVE_BOOK);
 
+  // Update savedBookIds in local storage whenever it changes
   useEffect(() => {
-    return () => saveBookIds(savedBookIds);
-  });
+    saveBookIds(savedBookIds);
+  }, [savedBookIds]);
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
@@ -64,12 +68,12 @@ const SearchBooks = () => {
 
     try {
       await saveBook({ variables: { input: bookToSave } });
-      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
+      // Update savedBookIds in local storage after saving a book
+      saveBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
       console.error(err);
     }
   };
-
 
   return (
     <>

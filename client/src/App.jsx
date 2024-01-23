@@ -1,17 +1,19 @@
+import React from 'react';
 import './App.css';
-import { Outlet } from 'react-router-dom';
-import { ApolloProvider } from '@apollo/client';
-import client from './apolloClient';
+import { Routes, Route } from 'react-router-dom';
+import SearchBooks from './pages/SearchBooks';
+import SavedBooks from './pages/SavedBooks';
 import Navbar from './components/Navbar';
 
 function App() {
   return (
-    <ApolloProvider client={client}> 
-      <>
-        <Navbar />
-        <Outlet />
-      </>
-    </ApolloProvider>
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<SearchBooks />} />
+        <Route path="/saved" element={<SavedBooks />} />
+      </Routes>
+    </>
   );
 }
 
