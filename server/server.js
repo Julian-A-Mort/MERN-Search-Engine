@@ -17,12 +17,12 @@ const server = new ApolloServer({
   resolvers,
   context: ({ req }) => authMiddleware({ req }),
 });
-server.applyMiddleware({ app });
 
-// if we're in production, serve client/build as static assets
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-}
+// Start the Apollo server and apply it to our Express app
+async function startApolloServer() {
+  await server.start();
+  server.applyMiddleware({ app });
+
 
 // Database connection and server start
 db.once('open', () => {
@@ -31,3 +31,7 @@ db.once('open', () => {
     console.log(`🌍 Now listening on localhost:${PORT}`);
   });
 });
+}
+
+// Call the async function to start the server
+startApolloServer();
