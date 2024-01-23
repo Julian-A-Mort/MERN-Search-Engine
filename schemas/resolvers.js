@@ -1,6 +1,6 @@
 const { AuthenticationError } = require('apollo-server-express');
 const User = require('../server/models/User');
-// utility for signing a JWT token
+const { signToken } = require('../server/utils/auth'); 
 
 const resolvers = {
   Query: {
