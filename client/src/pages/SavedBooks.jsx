@@ -6,7 +6,7 @@ import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 
 const SavedBooks = () => {
-  const { loading, data } = useQuery(GET_ME);
+  const { loading, data, error } = useQuery(GET_ME);
   const [removeBook] = useMutation(REMOVE_BOOK, {
     update(cache, { data: { removeBook } }) {
       cache.modify({
@@ -18,6 +18,25 @@ const SavedBooks = () => {
       });
     }
   });
+
+  if (loading) {
+    return <h2>LOADING...</h2>;
+  }
+
+  if (error) {
+    console.error("Error fetching saved books:", error);
+    return <h2>Error fetching saved books! {error.message}</h2>;
+  }
+
+  const userData = data?.me;
+
+  if (!userData || !userData.savedBooks) {
+    return <h2>No saved books found, or user data is not available.</h2>;
+  }
+
+  if (userData.savedBooks.length === 0) {
+    return <h2>You have no saved books.</h2>;
+  }
 
   const handleDeleteBook = async (bookId) => {
     if (!Auth.loggedIn()) {
@@ -31,12 +50,6 @@ const SavedBooks = () => {
       console.error(err);
     }
   };
-
-  if (loading) {
-    return <h2>LOADING...</h2>;
-  }
-
-  const userData = data?.me;
 
   return (
     <Container fluid className="text-light bg-dark p-5">
