@@ -1,6 +1,6 @@
 const { AuthenticationError } = require('apollo-server-express');
-const User = require('../server/models/User');
-const { signToken } = require('../server/utils/auth'); 
+const User = require('../models/User');
+const { signToken } = require('../utils/auth'); 
 
 const resolvers = {
   Query: {
@@ -39,16 +39,27 @@ const resolvers = {
     },
 
     saveBook: async (_, { input }, context) => {
-      if (context.user) {
-        const updatedUser = await User.findByIdAndUpdate(
-          context.user._id,
-          { $addToSet: { savedBooks: input } },
-          { new: true }
-        ).populate('savedBooks');
-
-        return updatedUser;
+      if (!context.user) {
+        console.log('No user in context');
+        throw new AuthenticationError('You need to be logged in!');
       }
-      throw new AuthenticationError('You need to be logged in!');
+
+      console.log('User ID:', context.user._id);
+      console.log('Book to save:', input);
+
+      try {
+        const updatedUser = await User.findByIdAndUpdate(
+          { _id:context.user._id},
+          { $push: { savedBooks: input } }, 
+          { new: true, runValidators: true }
+        )
+
+        console.log('Updated user:', updatedUser);
+        return updatedUser;
+      } catch (error) {
+        console.error('Error in saveBook mutation:', error);
+        throw new Error('Internal server error');
+      }
     },
 
     removeBook: async (_, { bookId }, context) => {

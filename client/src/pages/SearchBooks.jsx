@@ -1,28 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Container, Col, Form, Button, Card, Row } from 'react-bootstrap';
+import {
+  Container,
+  Col,
+  Form,
+  Button,
+  Card,
+  Row
+} from 'react-bootstrap';
+
+import Auth from '../utils/auth';
+import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 import { useMutation } from '@apollo/client';
 import { SAVE_BOOK } from '../graphql/mutations';
 
-import Auth from '../utils/auth';
-import { searchGoogleBooks } from '../utils/API';
-import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
-
 const SearchBooks = () => {
-  // Initialize savedBookIds from local storage
-  const savedBookIds = getSavedBookIds();
-
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
   const [searchInput, setSearchInput] = useState('');
 
-  // Apollo mutation hook for saving a book
-  const [saveBook] = useMutation(SAVE_BOOK);
+  // create state to hold saved bookId values
+  const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
 
-  // Update savedBookIds in local storage whenever it changes
+  // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
+  // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
-    saveBookIds(savedBookIds);
-  }, [savedBookIds]);
+    return () => saveBookIds(savedBookIds);
+  });
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
@@ -33,7 +38,7 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await searchGoogleBooks(searchInput);
+      const response = await fetch (`https://www.googleapis.com/books/v1/volumes?q=${searchInput}`);
 
       if (!response.ok) {
         throw new Error('something went wrong!');
@@ -60,17 +65,21 @@ const SearchBooks = () => {
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
-    console.log("Saving book:", bookToSave);
 
-    // proceed if user is logged in
-    if (!Auth.loggedIn()) {
+    // get token
+    const token = Auth.loggedIn() ? Auth.getToken() : null;
+
+    if (!token) {
       return false;
     }
 
     try {
-      await saveBook({ variables: { input: bookToSave } });
-      // Update savedBookIds in local storage after saving a book
-      saveBookIds([...savedBookIds, bookToSave.bookId]);
+      const {data} = await saveBook({
+        variables: { input:{...bookToSave} },
+      });
+
+      // if book successfully saves to user's account, save book id to state
+      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
       console.error(err);
     }

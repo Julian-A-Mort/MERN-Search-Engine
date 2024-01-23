@@ -8,16 +8,19 @@ import { removeBookId } from '../utils/localStorage';
 const SavedBooks = () => {
   const { loading, data, error } = useQuery(GET_ME);
   const [removeBook] = useMutation(REMOVE_BOOK, {
-    update(cache, { data: { removeBook } }) {
-      cache.modify({
-        fields: {
-          me(existingMeData) {
-            return removeBook;
-          },
+    update(client, { data: { removeBook: removedBook } }) {
+    client.modify({
+      fields: {
+        me(existingMeData) {
+          const newSavedBooks = existingMeData.savedBooks.filter(
+            book => book.bookId !== removeBook.bookId
+          );
+          return { ...existingMeData, savedBooks: newSavedBooks };
         },
-      });
-    }
-  });
+      },
+    });
+  }
+});
 
   if (loading) {
     return <h2>LOADING...</h2>;

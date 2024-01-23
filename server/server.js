@@ -1,37 +1,56 @@
+const jwt = require('jsonwebtoken');
 const { ApolloServer } = require('apollo-server-express');
-const { typeDefs, resolvers } = require('../schemas');
 const express = require('express');
 const path = require('path');
-const db = require('./config/connection');
 const { authMiddleware } = require('./utils/auth');
+const mongoose = require('mongoose');
 
-const app = express();
+const typeDefs = require('../server/schemas/typeDefs'); // Import your GraphQL type definitions
+const resolvers = require('../server/schemas/resolvers'); // Import your GraphQL resolvers
+
+const secret = 'secretsauce'; // Define your secret key
+
 const PORT = process.env.PORT || 3001;
+const app = express();
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: authMiddleware, // Apply auth middleware to the context
+});
 
-app.use(express.urlencoded({ extended: true }));
+// Middleware
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Apollo Server
-const server = new ApolloServer({ 
-  typeDefs, 
-  resolvers,
-  context: ({ req }) => authMiddleware({ req }),
-});
+// // MongoDB Connection
+// mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/your-database-name', {
+//   useCreateIndex: true,
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
 
-// Start the Apollo server and apply it to our Express app
+// mongoose.connection.once('open', () => {
+//   console.log('Connected to MongoDB');
+// });
+
+// Start the Apollo Server
 async function startApolloServer() {
   await server.start();
-  server.applyMiddleware({ app });
-
-
-// Database connection and server start
-db.once('open', () => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
-    console.log(`🌍 Now listening on localhost:${PORT}`);
-  });
-});
+  server.applyMiddleware({ app }); // Apply middleware after the server is started
 }
 
-// Call the async function to start the server
 startApolloServer();
+
+// // Serve static files in production
+// if (process.env.NODE_ENV === 'production') {
+//   app.use(express.static(path.join(__dirname, '../client/dist')));
+
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+//   });
+// }
+
+app.listen(PORT, () => {
+  console.log(`API server running on port ${PORT}!`);
+  console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
+});
