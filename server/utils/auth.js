@@ -1,30 +1,37 @@
 const jwt = require('jsonwebtoken');
-const secret = 'secretsauce';
 
-const authMiddleware = ({ req }) => {
-  let token = req.headers.authorization || '';
+// set token secret and expiration date
+const secret = 'mysecretsshhhhh';
+const expiration = '2h';
 
-  if (token) {
-      token = token.split(' ').pop().trim();
-  }
+module.exports = {
+  // Middleware for GraphQL authentication
+  authMiddleware: function ({ req }) {
+    let token = req.headers.authorization || '';
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7, token.length).trim();
+    }
 
-  if (!token) {
-      return req; 
-  }
+    if (!token) {
+      req.isAuth = false;
+      return req;
+    }
 
-  try {
-      const data = jwt.verify(token, secret);
+    try {
+      const { data } = jwt.verify(token, secret, { maxAge: expiration });
       req.user = data;
-  } catch {
-      console.log('Invalid token');
-  }
+      req.isAuth = true;
+    } catch (error) {
+      req.isAuth = false;
+      return req;
+    }
 
-  return req; 
+    return req;
+  },
+  
+  signToken: function ({ username, email, _id }) {
+    const payload = { username, email, _id };
+
+    return jwt.sign({ data: payload }, secret, { expiresIn: expiration });
+  },
 };
-
-const signToken = ({ _id, username, email }) => {
-  const payload = { _id, username, email };
-  return jwt.sign({ data: payload }, secret, { expiresIn: '2h' }); // Set an expiration for the token
-};
-
-module.exports = { authMiddleware, signToken };

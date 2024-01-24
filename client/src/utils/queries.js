@@ -1,4 +1,4 @@
-const gql = require('graphql-tag');
+import { gql } from '@apollo/client';
 
 export const GET_ME = gql`
   query me {
