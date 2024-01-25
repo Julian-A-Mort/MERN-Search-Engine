@@ -13,14 +13,8 @@ const app = express();
 
 // CORS options
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = ['http://localhost:3000', 'https://mern-search-engine.onrender.com'];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
+  origin: ['http://localhost:3000', 'https://mern-search-engine.onrender.com'], // Add your front-end URL here
+  credentials: true // Enable credentials to allow sending cookies and headers
 };
 
 // Use CORS with options in your Express app
@@ -29,11 +23,7 @@ app.use(cors(corsOptions));
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req }) => {
-    // Use auth middleware to populate the user in the context
-    const userContext = authMiddleware(req);
-    return { user: userContext.user };
-  }
+  context: ({ req }) => authMiddleware(req)
 });
 
 // Set up Apollo server
