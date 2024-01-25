@@ -11,11 +11,11 @@ const db = require('./config/connection');
 const PORT = process.env.PORT || 3001;
 const app = express();
 
-// CORS options
-const corsOptions = {
-  origin: ['http://localhost:3000', 'https://mern-search-engine.onrender.com'], // Add your front-end URL here
-  credentials: true // Enable credentials to allow sending cookies and headers
-};
+// // CORS options
+// const corsOptions = {
+//   origin: ['http://localhost:3000', 'https://mern-search-engine.onrender.com'], // Add your front-end URL here
+//   credentials: true // Enable credentials to allow sending cookies and headers
+// };
 
 // Use CORS with options in your Express app
 app.use(cors(corsOptions));
