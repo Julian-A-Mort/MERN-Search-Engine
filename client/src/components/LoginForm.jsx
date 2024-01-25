@@ -8,7 +8,7 @@ import Auth from '../utils/auth';
 
 const LoginForm = () => {
   const [userFormData, setUserFormData] = useState({ email: '', password: '' });
-  const [validated, setValidated] = useState(false); // Added setter for validated state
+  const [validated, setValidated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [loginUser] = useMutation(LOGIN_USER);
 
@@ -23,22 +23,21 @@ const LoginForm = () => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       setValidated(true);
-    } else {
-      setValidated(false);
-      try {
-        const { data } = await loginUser({ variables: { ...userFormData } });
-        console.log("Login response data:", data); // Log the entire response
+      return;  // Make sure to return here to avoid running the login mutation on invalid form
+    }
 
-        if (data && data.loginUser && data.loginUser.token) {
-          Auth.login(data.loginUser.token);
-        } else {
-          console.error("Login mutation did not return a token.");
-          setShowAlert(true);
-        }
-      } catch (err) {
-        console.error("Login error:", err);
+    try {
+      const { data } = await loginUser({ variables: userFormData });
+
+      if (data && data.login && data.login.token) {
+        Auth.login(data.login.token);
+      } else {
+        // Handle case where no token is returned
         setShowAlert(true);
       }
+    } catch (error) {
+      console.error("Login error:", error);
+      setShowAlert(true);
     }
   };
 

@@ -14,17 +14,21 @@ const resolvers = {
 
   Mutation: {
     login: async (_, { email, password }) => {
+      console.log(`Attempting to login user: ${email}`);
       const user = await User.findOne({ email });
       if (!user) {
-        throw new AuthenticationError('Incorrect email');
+        console.error('No user found with this email');
+        throw new AuthenticationError('Incorrect details!');
       }
 
       const correctPw = await user.isCorrectPassword(password);
       if (!correctPw) {
-        throw new AuthenticationError('Incorrect password');
+        console.error('Incorrect password');
+        throw new AuthenticationError('Incorrect details!');
       }
 
       const token = signToken(user);
+      console.log(`Generated token: ${token}`);
       return { token, user };
     },
 
