@@ -1,29 +1,29 @@
 const jwt = require('jsonwebtoken');
 
-// set token secret and expiration date
+// Set token secret and expiration date
 const secret = 'mysecretsshhhhh';
 const expiration = '2h';
 
 module.exports = {
-  // Middleware for GraphQL authentication
   authMiddleware: function ({ req }) {
-    let token = req.headers.authorization || '';
-    if (token.startsWith('Bearer ')) {
-      token = token.slice(7, token.length).trim();
+    // Allows token to be sent via req.body, req.query, or headers
+    let token = req.body.token || req.query.token || req.headers.authorization;
+
+    // Separate "Bearer" from "<tokenvalue>"
+    if (req.headers.authorization) {
+      token = token.split(' ').pop().trim();
     }
 
     if (!token) {
-      req.isAuth = false;
       return req;
     }
 
     try {
+      // Decode and attach user data to the request object
       const { data } = jwt.verify(token, secret, { maxAge: expiration });
       req.user = data;
-      req.isAuth = true;
-    } catch (error) {
-      req.isAuth = false;
-      return req;
+    } catch {
+      console.log('Invalid token');
     }
 
     return req;
@@ -31,7 +31,6 @@ module.exports = {
   
   signToken: function ({ username, email, _id }) {
     const payload = { username, email, _id };
-
     return jwt.sign({ data: payload }, secret, { expiresIn: expiration });
   },
 };

@@ -8,9 +8,8 @@ import Auth from '../utils/auth';
 
 const LoginForm = () => {
   const [userFormData, setUserFormData] = useState({ email: '', password: '' });
-  const [validated] = useState(false);
+  const [validated, setValidated] = useState(false); // Added setter for validated state
   const [showAlert, setShowAlert] = useState(false);
-
   const [loginUser] = useMutation(LOGIN_USER);
 
   const handleInputChange = (event) => {
@@ -20,32 +19,29 @@ const LoginForm = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-
-    // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
-      event.preventDefault();
       event.stopPropagation();
+      setValidated(true);
+    } else {
+      setValidated(false);
+      try {
+        const { data } = await loginUser({ variables: { ...userFormData } });
+        console.log("Login response data:", data); // Log the entire response
+
+        if (data && data.loginUser && data.loginUser.token) {
+          Auth.login(data.loginUser.token);
+        } else {
+          console.error("Login mutation did not return a token.");
+          setShowAlert(true);
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        setShowAlert(true);
+      }
     }
-
-    try {
-      // Execute the LOGIN_USER mutation
-      const { data } = await loginUser({
-        variables: { ...userFormData }
-      });
-
-      Auth.login(data.loginUser.token);
-    } catch (err) {
-      console.error(err);
-      setShowAlert(true);
-    }
-
-    setUserFormData({
-      username: '',
-      email: '',
-      password: '',
-    });
   };
+
 
   return (
     <>
